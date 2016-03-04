@@ -3,6 +3,7 @@
 
 import React, { PropTypes } from 'react-native'
 import Realm from 'realm';
+// import uuid from 'uuid';
 
 class Component extends React.Component {
 
@@ -16,27 +17,40 @@ class Component extends React.Component {
           this.setState({});
         });
 
+        this.state = {
+            realmArr: this.initialQuery()
+        }
+
         // Unregister all listeners
         // this.realm.removeAllListeners();
 
     }
 
     initSchema() {
+        class Development {}
+        Development.schema = {
+            name: 'Development',
+            primaryKey: 'id',
+            properties: {
+                id: 'int',
+                images: {type: 'list', objectType: 'Image'}
+            }
+        }
+
+        class ImageSchema {}
+        ImageSchema.schema = {
+            name: "Image",
+            primaryKey: "id",
+            properties: {
+                id: 'string',
+                data: 'string'
+            }
+        }
 
         this.realm = new Realm({
-            schema: [
-                {
-                    name: 'Dog',
-                    primaryKey: 'id',
-                    properties: {
-                        id: 'int',
-                        name: 'string',
-                        age: {type: 'int', default: 1}
-                    }
-                }
-            ],
+            schema: [ImageSchema, Development],
             // Increment version when schema changes
-            schemaVersion: 1
+            schemaVersion: 4
         })
 
         // let realmAtAnotherPath = new Realm({
@@ -46,29 +60,94 @@ class Component extends React.Component {
 
     }
 
+    initialQuery() {
+        let queryResults = this.queryRealm('Development');
+        let objectArr = [];
+        for(let obj in queryResults) {
+            objectArr.push(queryResults[obj])
+        }
+        return objectArr;
+    }
+
+    pushRealm() {
+
+
+        /*
+        // Dumb hackish way which I believe is unreliable, since their documentation isnt clear
+        //   on HOW to access a list, or even a specific object,
+        //   just `person.car.name` <- WHERE did `person` come from?!?
+
+        let numImgs = this.realm.objects('Development').filtered('id == 1111')[0].images.length
+        let list = this.realm.objects('Development').filtered('id == 1111')[0].images;
+
+        let properties = {
+            id: `String${numImgs}`,
+            data: "Some NEW String of Data"
+        }
+
+        this.realm.write(() => {
+            list.push(properties)
+        })
+
+
+        */
+
+        // A better way is using a primay key and using the method below
+        this.realm.write(() => {
+            let dev = this.realm.create('Development', {id: 1111}, true); // Not updating, we're getting here
+            let images = dev.images // <-  Now we have our list
+            let numImgs = images.length // <- Our example idnumber
+
+            let properties = {
+                id: `id-${numImgs}`,
+                data: "String of Data"
+            }
+
+            images.push(properties)
+        })
+
+
+    }
+
     writeRealm() {
 
-        let dogNames = ["Rex", "Rover", "Spot", "Champ", "Buster", "Bill", "Baxter", "Charlie"];
-        let dogAge = 3;
-        let numDogs = this.realm.objects('Dog').length;
+        let object = 'Development';
+        let properties = {
+            id: 1111,
+            images: []
+        };
+
         this.realm.write(() => {
-            this.realm.create('Dog', {
-                id: numDogs,
-                name: dogNames[numDogs]
-            }, true);
+            this.realm.create(object, properties);
         })
+
+        // let dogNames = ["Rex", "Rover", "Spot", "Champ", "Buster", "Bill", "Baxter", "Charlie"];
+        // let dogAge = 3;
+        // let numDogs = this.realm.objects('Dog').length;
+
+        // this.realm.write(() => {
+        //     this.realm.create('Dog', {
+        //         id: numDogs,
+        //         name: dogNames[numDogs]
+        //     }, true);
+        // })
     }
 
-    updateRealm() {
+    updateRealm(object, properties) {
+        return;
         this.realm.write(() => {
-            this.realm.create('Dog', {
-                id: 1,
-                age: 30
-            }, true);
+            this.realm.create(object, properties, true);
         })
+
+        // this.realm.write(() => {
+        //     this.realm.create('Dog', {
+        //         id: 1,
+        //         age: 30
+        //     }, true);
+        // })
     }
 
-    readRealm(query, object) {
+    queryRealm(object, query) {
         // Example AND and indexOf
         // dogs.filtered('color = "tan" AND name BEGINSWITH "B"');
 
@@ -76,7 +155,7 @@ class Component extends React.Component {
         //     get first 5 Car objects
         // let firstCars = Array.prototype.slice.call(cars, 0, 5);
 
-        if(!query) {return this.realm.objects(object) }
+        if(!query) { return this.realm.objects(object) }
         return this.realm.objects(object).filtered(query);
     }
 
@@ -86,23 +165,27 @@ class Component extends React.Component {
         })
     }
 
-    deleteRealm() {
-        let results = this.realm.objects('Dog').filtered('name != "Rex"')
+    deleteRealm(object, query) {
+        return;
+        let results = !query ? this.realm.objects(object) : this.realm.objects(object).filtered(query);
         this.realm.write(() => {
             this.realm.delete(results);
         })
     }
 
     render () {
-        let display = [];
-        let results = this.readRealm('', 'Dog')
-        for(let obj in results) {
-            display.push(results[obj])
-        }
-        let show = display.map((obj) => {
-            return <React.Text style={styles.realmObj} key={obj.name+obj.age}>{obj.name} is {obj.age}</React.Text>
-        })
 
+        let realmArr = this.state.realmArr.map((obj) => {
+            let images = [];
+            for(let img in obj.images) {
+                images.push(obj.images[img])
+            }
+            console.log(images)
+            let imgArr = images.map((img) => {
+                return <React.Text key={img.id}>imgID: {img.id}, imgData: {img.data}</React.Text>
+            })
+            return <React.Text style={styles.realmObj} key={obj.id}>{obj.id} images: {imgArr}</React.Text>
+        })
 
         return (
             <React.View>
@@ -112,6 +195,9 @@ class Component extends React.Component {
                 <React.TouchableHighlight style={styles.highlight} onPress={this.writeRealm.bind(this)}>
                     <React.Text>Create</React.Text>
                 </React.TouchableHighlight>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.pushRealm.bind(this)}>
+                    <React.Text>Push</React.Text>
+                </React.TouchableHighlight>
                 <React.TouchableHighlight style={styles.highlight} onPress={this.updateRealm.bind(this)}>
                     <React.Text>Update</React.Text>
                 </React.TouchableHighlight>
@@ -119,7 +205,7 @@ class Component extends React.Component {
                     <React.Text>Delete</React.Text>
                 </React.TouchableHighlight>
 
-                {show}
+                {realmArr}
             </React.View>
         )
     }
