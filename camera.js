@@ -2,6 +2,9 @@
 
 import React from 'react-native';
 import NativeModules from 'NativeModules'
+import uuid from 'uuid';
+
+import Realmjs from './realmWrapper.js'
 
 const Camera = NativeModules.ImagePickerManager
 
@@ -9,13 +12,22 @@ const Camera = NativeModules.ImagePickerManager
 class Component extends React.Component {
     constructor(props){
         super(props);
+        this.realm = new Realmjs();
+        this.realm.initSchema();
+        this.realm.addReactListener(() => {
+            this.setState({
+                realmImgs: this.realm.realmQueryToArray('Development', `id == ${props.idnum}`)
+            })
+        });
         this.state = {
-            images: [],
-            avatar: ''
+            dev: {idnum: props.idnum},
+            realmImgs: this.realm.realmQueryToArray('Development', `id == ${props.idnum}`)
         }
+
+
     }
 
-    grabPics() {
+    postPics() {
         // let options = {
         //     storageOptions: { // if this key is provided, the image will get saved in the documents/pictures directory (rather than a temporary directory)
         //     skipBackup: true, // image will NOT be backed up to icloud
@@ -23,65 +35,66 @@ class Component extends React.Component {
         //   }
         // }
         Camera.showImagePicker({}, (res) => {
-            if(res.didCancel){
-                console.log("Cancelled")
-            }
+            if(res.didCancel){ console.log("Cancelled"); }
             else {
+                let dev = this.state.dev;
+                let img = {imgId: `dev-${dev.idnum}-${uuid.v4()}`, data: res.data}
                 let options = {
                     method: "POST",
-                    body: JSON.stringify({dev: 1111, data: res.data})
+                    body: JSON.stringify(img)
                 }
-                fetch('http://yourip/upload/1111', options).then((uploadres) => {
-                    this.setState({
-                        picStatus: uploadres._bodyText,
-                        // avatar: {uri: res.uri.replace('file://', ''), isStatic: true}
-                        avatar: {uri: 'data:image/jpeg;base64,' + res.data, isStatic: true}
-                    }, () => {
-                        fetch('http://yourip/get/1111', {method: "POST"}).then((getres) => {
-                            console.log(getres._bodyText)
-                            let imgs = JSON.parse(getres._bodyText).imgs
-                            this.setState({
-                                images: imgs
-                            })
-                        }).catch((geterr) => {
-                            console.error(geterr);
-                        })
-                    })
 
+                fetch(`http://192.168.30.222:8086/upload/${dev.idnum}`, options).then((uploadres) => {
+                    this.realm.updateList('Development', dev.idnum, 'images', { id: img.imgId, data: img.data })
                 }).catch((fetcherr) => {
                     console.error(fetcherr);
                 })
-
-
             }
+        })
+    }
+
+    grabPics(){
+        let dev = this.state.dev;
+        fetch(`http://192.168.30.222:8086/get/${dev.idnum}`, {method: "POST"}).then((getres) => {
+            let body = getres._bodyText ? JSON.parse(getres._bodyText) : '';
+            let imgs = body ? body.imgs : '';
+
+            imgs.length && imgs.forEach((img) => {
+                console.log(img);
+                let realmImg = { devId: dev.idnum, imgId: img.id, data: img.data }
+                this.realm.updateList('Development', realmImg.devId, 'images', { id: realmImg.imgId, data: realmImg.data })
+            })
+        }).catch((geterr) => {
+            console.error(geterr);
         })
     }
 
     render() {
 
-        let returnedImgs = this.state.images.map((img, i) => {
-            return <React.Image key={i+img} style={styles.image}
-                source={{uri: "data:image/jpeg;base64,"+img}} />
+        let realmImgs = this.state.realmImgs.map((realmObj) => {
+            return this.realm.realmListToArray(realmObj, 'images').map((imgObj) => {
+                return <React.Image key={imgObj.id} style={styles.image}
+                        source={{uri: "data:image/jpeg;base64,"+imgObj.data}} />
+            })
         })
 
         return (
             <React.View style={styles.container}>
 
-                <React.TouchableOpacity onPress={this.grabPics.bind(this)}>
+                <React.TouchableOpacity onPress={this.postPics.bind(this)}>
                     <React.Text>Take a Pic</React.Text>
+                </React.TouchableOpacity>
+                <React.TouchableOpacity onPress={this.grabPics.bind(this)}>
+                    <React.Text>Grab Pics</React.Text>
                 </React.TouchableOpacity>
                 <React.ScrollView
                     automaticallyAdjustContentInsets={false}
                     contentContainerStyle={styles.imgScrollContainer}
                     style={styles.imgContainer}>
 
-                    {returnedImgs}
+                    {realmImgs}
 
                 </React.ScrollView>
-
-                <React.Text>{this.state.picStatus}</React.Text>
-
-
 
             </React.View>
         )
@@ -94,12 +107,7 @@ let styles = React.StyleSheet.create({
     container: {
         backgroundColor: "green",
         flexDirection: "row",
-        width: 460,
-        height: 160
-    },
-    camera: {
-        backgroundColor: "magenta",
-        flex: 1
+        width: 750
     },
     image: {
         height: 140,

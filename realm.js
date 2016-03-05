@@ -3,23 +3,28 @@
 
 import React, { PropTypes } from 'react-native'
 import Realm from 'realm';
-// import uuid from 'uuid';
 
-class Component extends React.Component {
+class RealmComponent extends React.Component {
 
     constructor(props){
         super(props)
         this.initSchema()
 
+        this.state = {
+            developments: this.realmQueryToArray('Development')
+        }
+
         // Observe Realm Change Events
         this.realm.addListener('change', () => {
           // Update UI
-          this.setState({});
-        });
+          //   When "deleting all", it was throwing an error as the state
+          //   was referencing objects that were deleted from the Realm instance,
+          //   so I decided to just re-query on change
+            this.setState({
+              developments: this.realmQueryToArray('Development')
+            });
 
-        this.state = {
-            realmArr: this.initialQuery()
-        }
+        });
 
         // Unregister all listeners
         // this.realm.removeAllListeners();
@@ -50,62 +55,12 @@ class Component extends React.Component {
         this.realm = new Realm({
             schema: [ImageSchema, Development],
             // Increment version when schema changes
-            schemaVersion: 4
+            schemaVersion: 5
         })
-
         // let realmAtAnotherPath = new Realm({
         //   path: 'anotherRealm.realm',
         //   schema: [CarSchema]
         // });
-
-    }
-
-    initialQuery() {
-        let queryResults = this.queryRealm('Development');
-        let objectArr = [];
-        for(let obj in queryResults) {
-            objectArr.push(queryResults[obj])
-        }
-        return objectArr;
-    }
-
-    pushRealm() {
-
-
-        /*
-        // Dumb hackish way which I believe is unreliable, since their documentation isnt clear
-        //   on HOW to access a list, or even a specific object,
-        //   just `person.car.name` <- WHERE did `person` come from?!?
-
-        let numImgs = this.realm.objects('Development').filtered('id == 1111')[0].images.length
-        let list = this.realm.objects('Development').filtered('id == 1111')[0].images;
-
-        let properties = {
-            id: `String${numImgs}`,
-            data: "Some NEW String of Data"
-        }
-
-        this.realm.write(() => {
-            list.push(properties)
-        })
-
-
-        */
-
-        // A better way is using a primay key and using the method below
-        this.realm.write(() => {
-            let dev = this.realm.create('Development', {id: 1111}, true); // Not updating, we're getting here
-            let images = dev.images // <-  Now we have our list
-            let numImgs = images.length // <- Our example idnumber
-
-            let properties = {
-                id: `id-${numImgs}`,
-                data: "String of Data"
-            }
-
-            images.push(properties)
-        })
-
 
     }
 
@@ -133,7 +88,7 @@ class Component extends React.Component {
         // })
     }
 
-    updateRealm(object, properties) {
+    updateProp(object, properties) {
         return;
         this.realm.write(() => {
             this.realm.create(object, properties, true);
@@ -145,6 +100,25 @@ class Component extends React.Component {
         //         age: 30
         //     }, true);
         // })
+    }
+
+    updateList(object, objId, listName, realmListProps) {
+        return;
+        this.realm.write(() => {
+            // How to access a specific object in Realm, "create" one with the id you wish to update
+            //   with the update flag set to true
+            let obj = this.realm.objects(object).filtered(`id == ${objId}`);
+            if(!obj.length) {
+                console.log("Creating...");
+                let newObjProperties = {id: objId}
+                newObjProperties[listName] = [];
+                this.realm.create(object, newObjProperties)
+            }
+            let realmObj = this.realm.create(object, {id: objId}, true); // Not updating, we're getting here
+            let realmList = realmObj[listName] // <-  Now we have our list
+
+            realmList.push(realmListProps)
+        })
     }
 
     queryRealm(object, query) {
@@ -173,15 +147,28 @@ class Component extends React.Component {
         })
     }
 
+    realmListToArray(object, listName){
+        let listArray = [];
+        for(let arrItem in object[listName]) {
+            listArray.push(object[listName][arrItem])
+        }
+        return listArray;
+    }
+
+    realmQueryToArray(object, query) {
+        let queryResults = this.queryRealm(object, query);
+        let objectArr = [];
+        for(let obj in queryResults) {
+            objectArr.push(queryResults[obj])
+        }
+        return objectArr
+    }
+
     render () {
 
-        let realmArr = this.state.realmArr.map((obj) => {
-            let images = [];
-            for(let img in obj.images) {
-                images.push(obj.images[img])
-            }
-            console.log(images)
-            let imgArr = images.map((img) => {
+        let developments = this.state.developments.map((obj) => {
+
+            let imgArr = this.realmListToArray(obj, 'images').map((img) => {
                 return <React.Text key={img.id}>imgID: {img.id}, imgData: {img.data}</React.Text>
             })
             return <React.Text style={styles.realmObj} key={obj.id}>{obj.id} images: {imgArr}</React.Text>
@@ -195,23 +182,23 @@ class Component extends React.Component {
                 <React.TouchableHighlight style={styles.highlight} onPress={this.writeRealm.bind(this)}>
                     <React.Text>Create</React.Text>
                 </React.TouchableHighlight>
-                <React.TouchableHighlight style={styles.highlight} onPress={this.pushRealm.bind(this)}>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.updateList.bind(this)}>
                     <React.Text>Push</React.Text>
                 </React.TouchableHighlight>
-                <React.TouchableHighlight style={styles.highlight} onPress={this.updateRealm.bind(this)}>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.updateProp.bind(this)}>
                     <React.Text>Update</React.Text>
                 </React.TouchableHighlight>
                 <React.TouchableHighlight style={styles.highlight} onPress={this.deleteRealm.bind(this)}>
                     <React.Text>Delete</React.Text>
                 </React.TouchableHighlight>
 
-                {realmArr}
+
             </React.View>
         )
     }
 }
 
-export default Component
+export default RealmComponent
 
 let styles = React.StyleSheet.create({
     highlight: {

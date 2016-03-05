@@ -2,9 +2,9 @@
 
 import Realm from 'realm';
 
-class Component {
+class RealmWrapper {
 
-    initSchema(that) {
+    initSchema() {
         class Development {}
         Development.schema = {
             name: 'Development',
@@ -15,29 +15,26 @@ class Component {
             }
         }
 
-        class Image {}
-        Image.schema = {
+        class ImageSchema {}
+        ImageSchema.schema = {
             name: "Image",
             primaryKey: "id",
             properties: {
                 id: 'string',
-                data: 'data'
+                data: 'string'
             }
         }
 
         this.realm = new Realm({
-            schema: [Development, Image],
-            schemaVersion: 2
+            schema: [ImageSchema, Development],
+            // Increment version when schema changes
+            schemaVersion: 5
         })
-
-        this.addReactListener(that);
 
     }
 
-    addReactListener(that) {
-        this.realm.addListener('change', () => {
-          that.setState({});
-        });
+    addReactListener(cb) {
+        this.realm.addListener('change', cb);
     }
 
     write(object, properties) {
@@ -46,29 +43,28 @@ class Component {
         })
     }
 
-    update(object, properties) {
-        // TODO Detect if the property being updated is a list
-        // Push if its new, slice/replace if updating
-        // Otherwise assign the new value
-
+    updateProp(object, properties) {
         this.realm.write(() => {
             this.realm.create(object, properties, true);
         })
+    }
 
-        // How to access a specific object in Realm, "create" one with the id you wish to update
-        //   with the update flag set to true
+    updateList(object, objId, listName, realmListProps) {
 
         this.realm.write(() => {
-            let dev = this.realm.create(object, {id: 1111}, true); // Not updating, we're getting here
-            let list = dev.images // <-  Now we have our list  -- TODO Detect what list we're attempting to access
-            let numListItems = list.length // <- Our example idnumber
-
-            let properties = {
-                id: `id-${numListItems}`,
-                data: "String of Data"
+            // How to access a specific object in Realm, "create" one with the id you wish to update
+            //   with the update flag set to true
+            let obj = this.realm.objects(object).filtered(`id == ${objId}`);
+            if(!obj.length) {
+                console.log("Creating...");
+                let newObjProperties = {id: objId}
+                newObjProperties[listName] = [];
+                this.realm.create(object, newObjProperties)
             }
+            let realmObj = this.realm.create(object, {id: objId}, true); // Not updating, we're getting here
+            let realmList = realmObj[listName] // <-  Now we have our list
 
-            list.push(properties)
+            realmList.push(realmListProps)
         })
     }
 
@@ -90,8 +86,8 @@ class Component {
         })
     }
 
-    initialQuery() {
-        let queryResults = this.queryRealm('Development');
+    realmQueryToArray(object, query) {
+        let queryResults = this.query(object, query);
         let objectArr = [];
         for(let obj in queryResults) {
             objectArr.push(queryResults[obj])
@@ -99,6 +95,14 @@ class Component {
         return objectArr;
     }
 
+    realmListToArray(object, listName){
+        let listArray = [];
+        for(let arrItem in object[listName]) {
+            listArray.push(object[listName][arrItem])
+        }
+        return listArray;
+    }
+
 }
 
-export default Component
+export default RealmWrapper

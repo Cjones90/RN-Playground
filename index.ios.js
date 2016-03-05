@@ -31,7 +31,7 @@ class testReact extends Component {
           Welcome to React Native!
         </Text>
         <Picker title="Sample Display" pickerData={fakeData} />
-        <Camera style={styles.camera}/>
+        <Camera style={styles.camera} idnum={2222}/>
 
         <Realm />
 
@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   camera: {
+      flex: 1
   }
 });
 

@@ -2,7 +2,7 @@
 
 import React from 'react-native';
 
-export default class Component extends React.Component {
+export default class PickerComponent extends React.Component {
 
     constructor(props) {
         super(props);

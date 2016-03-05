@@ -8,7 +8,7 @@ import React from 'react-native';
 //  a number to send to the underlying component prop, which uses the same validation.
 //  We'll fix it at some point.
 
-export default class Component extends React.Component {
+export default class DatePickerComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
