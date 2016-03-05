@@ -14,7 +14,7 @@ import React, {
 import Picker from './picker.js';
 import DatePicker from './datepicker.js';
 import Camera from './camera.js';
-import Realm from './realm.js';
+import Realm from './realmSample.js';
 
 let valueArr = ["Value1", "Value2", "Value3", "Value4", "Value5"]
 let fakeData = valueArr.map((val) => { return "A "+val })

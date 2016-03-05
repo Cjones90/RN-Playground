@@ -8,6 +8,7 @@
   "dependencies": {
     "react-native": "^0.20.0",
     "react-native-image-picker": "^0.18.0",
-    "realm": "^0.10.0"
+    "realm": "^0.10.0",
+    "uuid": "^2.0.1"
   }
 }

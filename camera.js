@@ -4,7 +4,7 @@ import React from 'react-native';
 import NativeModules from 'NativeModules'
 import uuid from 'uuid';
 
-import Realmjs from './realmWrapper.js'
+import Realmjs from './realm.js'
 
 const Camera = NativeModules.ImagePickerManager
 
@@ -12,16 +12,37 @@ const Camera = NativeModules.ImagePickerManager
 class Component extends React.Component {
     constructor(props){
         super(props);
+
+        class Development {}
+        Development.schema = {
+            name: 'Development',
+            primaryKey: 'id',
+            properties: {
+                id: 'int',
+                images: {type: 'list', objectType: 'Image'}
+            }
+        }
+
+        class ImageSchema {}
+        ImageSchema.schema = {
+            name: "Image",
+            primaryKey: "id",
+            properties: {
+                id: 'string',
+                data: 'string'
+            }
+        }
+
         this.realm = new Realmjs();
-        this.realm.initSchema();
-        this.realm.addReactListener(() => {
+        this.realm.initSchema({schemas: [ImageSchema, Development], version: 5});
+        this.realm.addRealmListener(() => {
             this.setState({
-                realmImgs: this.realm.realmQueryToArray('Development', `id == ${props.idnum}`)
+                realmImgs: this.realm.queryToArray('Development', `id == ${props.idnum}`)
             })
         });
         this.state = {
             dev: {idnum: props.idnum},
-            realmImgs: this.realm.realmQueryToArray('Development', `id == ${props.idnum}`)
+            realmImgs: this.realm.queryToArray('Development', `id == ${props.idnum}`)
         }
 
 
@@ -60,7 +81,6 @@ class Component extends React.Component {
             let imgs = body ? body.imgs : '';
 
             imgs.length && imgs.forEach((img) => {
-                console.log(img);
                 let realmImg = { devId: dev.idnum, imgId: img.id, data: img.data }
                 this.realm.updateList('Development', realmImg.devId, 'images', { id: realmImg.imgId, data: realmImg.data })
             })
@@ -72,7 +92,7 @@ class Component extends React.Component {
     render() {
 
         let realmImgs = this.state.realmImgs.map((realmObj) => {
-            return this.realm.realmListToArray(realmObj, 'images').map((imgObj) => {
+            return this.realm.listToArray(realmObj, 'images').map((imgObj) => {
                 return <React.Image key={imgObj.id} style={styles.image}
                         source={{uri: "data:image/jpeg;base64,"+imgObj.data}} />
             })
@@ -128,7 +148,6 @@ let styles = React.StyleSheet.create({
 })
 
 
-//
 // getPhotos(){
 //     React.CameraRoll.getPhotos({first: 100}, (success) => {
 //         console.log(success)
@@ -144,17 +163,3 @@ let styles = React.StyleSheet.create({
 //
 //     })
 // }
-//
-// takePicture(){
-//     this.camera.capture()
-//     .then((data) => {
-//         this.getPhotos();
-//         console.log(data)
-//     })
-//     .catch((err) => {console.error(err);})
-// }
-// <Camera style={styles.camera}
-//     ref={(cam) => { this.camera = cam }}
-//     aspect={Camera.constants.Aspect.Fill}>
-//     <React.Text onPress={this.takePicture.bind(this)}>Take Pic</React.Text>
-// </Camera>
