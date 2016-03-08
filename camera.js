@@ -1,7 +1,7 @@
 'use strict';
 
 import React from 'react-native';
-import NativeModules from 'NativeModules'
+import NativeModules from 'NativeModules';
 import uuid from 'uuid';
 
 import Realmjs from './realm.js'
@@ -29,12 +29,13 @@ class Component extends React.Component {
             primaryKey: "id",
             properties: {
                 id: 'string',
+                parentId: {type: 'int', default: null},
                 data: 'string'
             }
         }
 
         this.realm = new Realmjs();
-        this.realm.initSchema({schemas: [ImageSchema, Development], version: 5});
+        this.realm.initSchema({schemas: [ImageSchema, Development], version: 9});
         this.realm.addRealmListener(() => {
             this.setState({
                 realmImgs: this.realm.queryToArray('Development', `id == ${props.idnum}`)
@@ -66,7 +67,7 @@ class Component extends React.Component {
                 }
 
                 fetch(`http://192.168.30.222:8086/upload/${dev.idnum}`, options).then((uploadres) => {
-                    this.realm.updateList('Development', dev.idnum, 'images', { id: img.imgId, data: img.data })
+                    this.realm.updateList('Development', dev.idnum, 'images', { id: img.imgId, parentId: dev.idnum, data: img.data })
                 }).catch((fetcherr) => {
                     console.error(fetcherr);
                 })
@@ -82,11 +83,19 @@ class Component extends React.Component {
 
             imgs.length && imgs.forEach((img) => {
                 let realmImg = { devId: dev.idnum, imgId: img.id, data: img.data }
-                this.realm.updateList('Development', realmImg.devId, 'images', { id: realmImg.imgId, data: realmImg.data })
+                this.realm.updateList('Development', realmImg.devId, 'images', { id: realmImg.imgId, parentId: realmImg.devId, data: realmImg.data })
             })
         }).catch((geterr) => {
             console.error(geterr);
         })
+    }
+
+    deleteStoragePics(){
+        this.realm.delete('Development', `id == ${this.state.dev.idnum}`)
+    }
+
+    deleteAllStorage(){
+        this.realm.deleteAll()
     }
 
     render() {
@@ -98,15 +107,22 @@ class Component extends React.Component {
             })
         })
 
+
         return (
             <React.View style={styles.container}>
 
-                <React.TouchableOpacity onPress={this.postPics.bind(this)}>
-                    <React.Text>Take a Pic</React.Text>
-                </React.TouchableOpacity>
-                <React.TouchableOpacity onPress={this.grabPics.bind(this)}>
-                    <React.Text>Grab Pics</React.Text>
-                </React.TouchableOpacity>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.postPics.bind(this)}>
+                    <React.Text style={styles.innerText}>Take a Pic</React.Text>
+                </React.TouchableHighlight>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.grabPics.bind(this)}>
+                    <React.Text style={styles.innerText}>Grab Pics</React.Text>
+                </React.TouchableHighlight>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.deleteAllStorage.bind(this)}>
+                    <React.Text style={styles.innerText}>Delete All Storage</React.Text>
+                </React.TouchableHighlight>
+                <React.TouchableHighlight style={styles.highlight} onPress={this.deleteStoragePics.bind(this)}>
+                    <React.Text style={styles.innerText}>Delete Storage Pics</React.Text>
+                </React.TouchableHighlight>
                 <React.ScrollView
                     automaticallyAdjustContentInsets={false}
                     contentContainerStyle={styles.imgScrollContainer}
@@ -126,7 +142,7 @@ export default Component
 let styles = React.StyleSheet.create({
     container: {
         backgroundColor: "green",
-        flexDirection: "row",
+        flexDirection: "column",
         width: 750
     },
     image: {
@@ -144,6 +160,18 @@ let styles = React.StyleSheet.create({
         flexWrap: "wrap",
         flex: 2,
     },
+    highlight: {
+        flexDirection: "column",
+        alignItems: 'center',
+        margin: 5,
+        borderRadius: 5,
+        backgroundColor: "white",
+        flex: 1
+    },
+    innerText: {
+        textAlign: 'center',
+        margin: 5,
+    }
 
 })
 

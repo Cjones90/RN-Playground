@@ -55,7 +55,7 @@ class RealmComponent extends React.Component {
         this.realm = new Realm({
             schema: [ImageSchema, Development],
             // Increment version when schema changes
-            schemaVersion: 5
+            schemaVersion: 7
         })
         // let realmAtAnotherPath = new Realm({
         //   path: 'anotherRealm.realm',

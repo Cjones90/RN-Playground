@@ -7,6 +7,7 @@ export default class PickerComponent extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            initial: props.pickerData[0],
             value: props.pickerData[0],
             fields: props.pickerData,
             pickerState: false,
@@ -17,8 +18,12 @@ export default class PickerComponent extends React.Component {
         }
     }
 
-    togglePicker() {
-        this.setState({pickerState: !this.state.pickerState})
+    togglePicker(e) {
+        this.setState({
+            pickerState: !this.state.pickerState,
+            value: e === "close" ? this.state.initial : this.state.value,
+            initial: e === "close" ? this.state.initial : this.state.value
+        })
     }
 
     closeModal(event) {
@@ -37,6 +42,7 @@ export default class PickerComponent extends React.Component {
     }
 
     render() {
+
         return (
             <React.View style={styles.container}>
                 <React.Text style={styles.title}>{this.props.title}</React.Text>
@@ -56,7 +62,8 @@ export default class PickerComponent extends React.Component {
                             onValueChange={(val) => { this.setState({value: val}) }}>
                             {this.renderPickerItems()}
                         </React.Picker>
-                        <React.Text style={styles.pickerClose} onPress={this.togglePicker.bind(this)}>Close</React.Text>
+                        <React.Text style={styles.pickerSave} onPress={this.togglePicker.bind(this, 'save')}>Save</React.Text>
+                        <React.Text style={styles.pickerClose} onPress={this.togglePicker.bind(this, 'close')}>Close</React.Text>
                     </React.View>
 
                 </React.Modal>
@@ -66,9 +73,43 @@ export default class PickerComponent extends React.Component {
     }
 }
 
+// Just testing out ideas for classes in react-native
+let cssCombine = function(...args) {
+    let len = args.length;
+    let start = {}
+    for(let i = 0; i < len; i += 1){
+        for(let p in args[i]) {
+            start[p] = args[i][p]
+        }
+    }
+    return start;
+}
+
+let css = {
+    pickerBox: {
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: "black",
+        borderRadius: 4,
+        backgroundColor: "#CCE6FF",
+        color: "black",
+        fontSize: 30,
+        paddingLeft: 25,
+        paddingRight: 21,
+        position: "absolute",
+        overflow: "hidden",
+        top: React.Dimensions.get('window').height * 0.08,
+    },
+    pickerSave: {
+        right: 150
+    },
+    pickerClose: {
+        right: 3
+    },
+}
+
 const styles = React.StyleSheet.create({
     container: {
-        flex: 1,
         justifyContent: 'flex-end'
     },
     title: {
@@ -105,20 +146,7 @@ const styles = React.StyleSheet.create({
         backgroundColor: "rgba(0, 0, 0, 0.7)",
         flex: 1
     },
-    pickerClose: {
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "black",
-        borderRadius: 4,
-        backgroundColor: "#CCE6FF",
-        color: "black",
-        fontSize: 30,
-        paddingLeft: 25,
-        paddingRight: 21,
-        position: "absolute",
-        overflow: "hidden",
-        right: 3,
-        top: React.Dimensions.get('window').height * 0.08,
-    },
+    pickerSave: cssCombine(css.pickerBox, css.pickerSave),
+    pickerClose: cssCombine(css.pickerBox, css.pickerClose)
 
 })

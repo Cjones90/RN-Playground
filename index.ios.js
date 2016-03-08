@@ -23,7 +23,7 @@ fakeData = fakeData.concat(valueArr.map((val) => { return "B "+val }))
 
 class testReact extends Component {
     // <DatePicker title="DatePicker" date={new Date()} />
-
+    // <Realm />
   render() {
 
     return (
@@ -34,7 +34,7 @@ class testReact extends Component {
         <Picker title="Sample Display" pickerData={fakeData} />
         <Camera style={styles.camera} idnum={2222}/>
 
-        <Realm />
+
         <Latlng />
 
       </View>
