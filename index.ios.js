@@ -15,10 +15,11 @@ import Picker from './picker.js';
 import DatePicker from './datepicker.js';
 import Camera from './camera.js';
 import Realm from './realmSample.js';
+import Latlng from './latlng.js'
 
 let valueArr = ["Value1", "Value2", "Value3", "Value4", "Value5"]
 let fakeData = valueArr.map((val) => { return "A "+val })
-
+fakeData = fakeData.concat(valueArr.map((val) => { return "B "+val }))
 
 class testReact extends Component {
     // <DatePicker title="DatePicker" date={new Date()} />
@@ -34,6 +35,7 @@ class testReact extends Component {
         <Camera style={styles.camera} idnum={2222}/>
 
         <Realm />
+        <Latlng />
 
       </View>
     );
