@@ -24,18 +24,21 @@ class LatLng extends React.Component {
 
     render(){
         return (
-            <React.View style={styles.container}>
-                <React.View style={styles.textContainer}>
-                    <React.Text style={styles.text}>Lat:</React.Text>
-                    <React.Text style={styles.text}>Lng:</React.Text>
+            <React.View>
+                <React.Text style={styles.title}>{this.props.title}</React.Text>
+                <React.View style={styles.container}>
+                    <React.View style={styles.textContainer}>
+                        <React.Text style={styles.text}>Lat:</React.Text>
+                        <React.Text style={styles.text}>Lng:</React.Text>
+                    </React.View>
+                    <React.View style={styles.latContainer}>
+                        <React.Text style={styles.latlng}>{this.state.lat}</React.Text>
+                        <React.Text style={styles.latlng}>{this.state.lng}</React.Text>
+                    </React.View>
+                    <React.TouchableHighlight style={styles.button} onPress={this.getPos.bind(this)}>
+                        <React.Text style={styles.buttonText}>Get</React.Text>
+                    </React.TouchableHighlight>
                 </React.View>
-                <React.View style={styles.latContainer}>
-                    <React.Text style={styles.latlng}>{this.state.lat}</React.Text>
-                    <React.Text style={styles.latlng}>{this.state.lng}</React.Text>
-                </React.View>
-                <React.TouchableHighlight style={styles.button} onPress={this.getPos.bind(this)}>
-                    <React.Text style={styles.button}>Get</React.Text>
-                </React.TouchableHighlight>
             </React.View>
         )
     }
@@ -45,11 +48,18 @@ let styles = React.StyleSheet.create({
     container: {
         flexDirection: 'row',
         backgroundColor: 'grey',
-        width: 220,
+        backgroundColor: '#F8F8F9',
+        borderColor: 'gray',
+        borderWidth: 1,
         height: 40
     },
+    title: {
+        fontSize: 12,
+        textAlign: 'center',
+        marginTop: 10
+    },
     textContainer: {
-        flex: 1,
+        flex: 2,
         marginLeft: 3,
         justifyContent: 'center',
     },
@@ -60,11 +70,17 @@ let styles = React.StyleSheet.create({
         alignItems: 'flex-end'
     },
     button: {
-        flex: 3,
-        alignItems: 'center',
+        flex: 2,
         backgroundColor: 'yellow',
+        borderColor: 'gray',
+        borderWidth: 1,
         borderRadius: 4,
-        margin: 6
+        margin: 4,
+        justifyContent: 'center',
+    },
+    buttonText: {
+        backgroundColor: 'yellow',
+        alignSelf: 'center'
     }
 })
 

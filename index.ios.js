@@ -8,43 +8,34 @@ import React, {
   Component,
   StyleSheet,
   Text,
-  View
+  View,
+  Navigator
 } from 'react-native';
 
-import Picker from './picker.js';
-import DatePicker from './datepicker.js';
-import Camera from './camera.js';
-import Realm from './realmSample.js';
-import Latlng from './latlng.js'
-
-let valueArr = ["Value1", "Value2", "Value3", "Value4", "Value5"]
-let fakeData = valueArr.map((val) => { return "A "+val })
-fakeData = fakeData.concat(valueArr.map((val) => { return "B "+val }))
+import Main from './main.js'
 
 class testReact extends Component {
-    // <DatePicker title="DatePicker" date={new Date()} />
-    // <Realm />
-  render() {
 
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Picker title="Sample Display" pickerData={fakeData} />
-        <Camera style={styles.camera} idnum={2222}/>
+    renderScene(route, navigator) {
+        let page = void(0);
+        console.log("route.name ", route.name);
+        route.name === "Menu" && (page = <Main navigator={navigator} />);
+        return page;
+    }
 
+    render() {
 
-        <Latlng />
+        const route = {name: "Menu"}
 
-      </View>
-    );
-  }
+        return (
+            <Navigator initialRoute={route} renderScene={this.renderScene} style={styles.menu}/>
+        );
+    }
 }
 
-const styles = StyleSheet.create({
+let styles = StyleSheet.create({
   container: {
-    flex: 1,
+      flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
@@ -62,7 +53,11 @@ const styles = StyleSheet.create({
   },
   camera: {
       flex: 1
+  },
+  menu: {
+      backgroundColor: '#bfd6f2',
   }
 });
+
 
 AppRegistry.registerComponent('testReact', () => testReact);
