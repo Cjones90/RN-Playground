@@ -19,8 +19,7 @@ import DatePicker from './datepicker.js';
 import Camera from './camera.js';
 import Realm from './realmSample.js';
 import Latlng from './latlng.js'
-
-import Menu from './menu.js'
+import Menu from './sideMenu.js'
 
 const window = React.Dimensions.get('window');
 
@@ -40,10 +39,9 @@ export default class testReact extends Component {
 
     render() {
 
-        const menu = <Menu navigator={navigator} style={styles.menu}/>
+        const menu = <Menu navigator={navigator}/>
 
         return (
-
             <SideMenu menu={menu} openMenuOffset={window.width * (1/3)}>
                 <View style={styles.container}>
                     <Text style={styles.welcome}>
@@ -57,7 +55,7 @@ export default class testReact extends Component {
 
 let styles = StyleSheet.create({
   container: {
-      flex: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
@@ -68,15 +66,7 @@ let styles = StyleSheet.create({
     textAlign: 'center',
     margin: 10,
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
   camera: {
       flex: 1
   },
-  menu: {
-      backgroundColor: '#bfd6f2',
-  }
 });

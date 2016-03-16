@@ -28,33 +28,13 @@ class testReact extends Component {
         const route = {name: "Menu"}
 
         return (
-            <Navigator initialRoute={route} renderScene={this.renderScene} style={styles.menu}/>
+            <Navigator initialRoute={route} renderScene={this.renderScene} style={styles.background}/>
         );
     }
 }
 
 let styles = StyleSheet.create({
-  container: {
-      flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-    overflow: "visible"
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  camera: {
-      flex: 1
-  },
-  menu: {
+  background: {
       backgroundColor: '#bfd6f2',
   }
 });
