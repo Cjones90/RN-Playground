@@ -13,13 +13,13 @@ import React, {
 } from 'react-native';
 
 import SideMenu from 'react-native-side-menu';
+import Menu from './sideMenu.js'
 
 import Picker from './picker.js';
 import DatePicker from './datepicker.js';
 import Camera from './camera.js';
 import Realm from './realmSample.js';
 import Latlng from './latlng.js'
-import Menu from './sideMenu.js'
 
 const window = React.Dimensions.get('window');
 
